@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { User } from '@supabase/supabase-js';
 import { Class, Subject, Note } from '@/types';
 import { BookOpen, Plus, Users, LogOut, ArrowLeft } from 'lucide-react';
+import NoteEditor from './NoteEditor';
 
 interface DashboardProps {
   user: User;
@@ -18,6 +19,7 @@ export default function Dashboard({ user }: DashboardProps) {
   const [notes, setNotes] = useState<Note[]>([]);
   const [selectedClass, setSelectedClass] = useState<Class | null>(null);
   const [selectedSubject, setSelectedSubject] = useState<Subject | null>(null);
+  const [selectedNote, setSelectedNote] = useState<Note | null>(null);
   const [loading, setLoading] = useState(true);
 
   // Modals
@@ -264,7 +266,8 @@ export default function Dashboard({ user }: DashboardProps) {
       setNoteTitle('');
       setShowCreateNote(false);
       setError('');
-      alert('Note created! (Full editor coming in next phase)');
+      // Open the newly created note in editor
+      setSelectedNote(newNote);
     } catch (err: any) {
       setError(err.message);
     }
@@ -279,6 +282,20 @@ export default function Dashboard({ user }: DashboardProps) {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-xl">Loading your data...</div>
       </div>
+    );
+  }
+
+  // Show Note Editor when note is selected
+  if (selectedNote) {
+    return (
+      <NoteEditor
+        noteId={selectedNote.id}
+        onBack={() => {
+          setSelectedNote(null);
+          loadNotes(selectedSubject!.id);
+        }}
+        currentUserId={user.id}
+      />
     );
   }
 
@@ -460,10 +477,17 @@ export default function Dashboard({ user }: DashboardProps) {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {notes.map((note) => (
-                  <div key={note.id} className="card">
+                  <div 
+                    key={note.id} 
+                    className="card"
+                    onClick={() => setSelectedNote(note)}
+                  >
                     <h3 className="text-lg font-bold text-gray-900 mb-2">{note.title}</h3>
                     <p className="text-sm text-gray-600 line-clamp-3">
                       {note.content || 'No content yet...'}
+                    </p>
+                    <p className="text-xs text-gray-400 mt-3">
+                      Click to edit
                     </p>
                   </div>
                 ))}
